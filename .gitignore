@@ -8,7 +8,8 @@ dist/
 coverage/
 *.log
 
-# Local agent instructions
+# Local documentation & agent instructions
+docs/
 AGENTS.md
 .opencode/skills/express-feature/
 
