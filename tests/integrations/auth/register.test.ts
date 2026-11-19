@@ -19,6 +19,7 @@ describe("POST /auth/register", () => {
       const response = await request(app).post("/api/auth/register").send({
         username: "jho",
         name: "Test User",
+        email: "test_user@example.com",
         password: "1234567890",
         roleId: 1,
       });
@@ -38,6 +39,7 @@ describe("POST /auth/register", () => {
         .send({
           username: "a".repeat(51),
           name: "Test User",
+          email: "test_user@example.com",
           password: "1234567890",
           roleId: 1,
         });
@@ -55,6 +57,7 @@ describe("POST /auth/register", () => {
       const response = await request(app).post("/api/auth/register").send({
         username: "test_user",
         name: "Test User",
+        email: "test_user@example.com",
         password: "1234567",
         roleId: 1,
       });
@@ -72,6 +75,7 @@ describe("POST /auth/register", () => {
       const response = await request(app).post("/api/auth/register").send({
         username: "test_user",
         name: "ab",
+        email: "test_user@example.com",
         password: "1234567890",
         roleId: 1,
       });
@@ -91,6 +95,7 @@ describe("POST /auth/register", () => {
         .send({
           username: "test_user",
           name: "a".repeat(101),
+          email: "test_user@example.com",
           password: "1234567890",
           roleId: 1,
         });
@@ -104,10 +109,46 @@ describe("POST /auth/register", () => {
       });
     });
 
+    it("should reject missing email", async () => {
+      const response = await request(app).post("/api/auth/register").send({
+        username: "test_user",
+        name: "Test User",
+        password: "1234567890",
+        roleId: 1,
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe("VALIDATION_ERROR");
+      expect(response.body.errors[0]).toMatchObject({
+        field: "email",
+        code: "invalid_type",
+      });
+    });
+
+    it("should reject invalid email format", async () => {
+      const response = await request(app).post("/api/auth/register").send({
+        username: "test_user",
+        name: "Test User",
+        email: "bukan-email",
+        password: "1234567890",
+        roleId: 1,
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe("VALIDATION_ERROR");
+      expect(response.body.errors[0]).toMatchObject({
+        field: "email",
+        code: "invalid_format",
+      });
+    });
+
     it("should reject roleId that is not an integer", async () => {
       const response = await request(app).post("/api/auth/register").send({
         username: "test_user",
         name: "Test User",
+        email: "test_user@example.com",
         password: "1234567890",
         roleId: 1.5,
       });
@@ -125,6 +166,7 @@ describe("POST /auth/register", () => {
       const response = await request(app).post("/api/auth/register").send({
         username: "test_user",
         name: "Test User",
+        email: "test_user@example.com",
         password: "1234567890",
         roleId: 0,
       });
@@ -139,23 +181,74 @@ describe("POST /auth/register", () => {
     });
   });
 
-  it("should reject user already exist", async () => {
-    const password = "1234567890";
-    const user = {
-      username: "test_user",
-      name: "Test User",
-      password: await hashPassword(password),
-      roleId: 1,
-    };
+  describe("Conflict", () => {
+    it("should reject user already exist", async () => {
+      const password = "1234567890";
+      const user = {
+        username: "test_user",
+        name: "Test User",
+        email: "test_user@example.com",
+        password: await hashPassword(password),
+        roleId: 1,
+      };
 
-    await db.insert(users).values(user);
-    const response = await request(app)
-      .post("/api/auth/register")
-      .send({ ...user, password: password });
+      await db.insert(users).values(user);
+      const response = await request(app)
+        .post("/api/auth/register")
+        .send({ ...user, password: password });
 
-    expect(response.status).toBe(409);
-    expect(response.body.success).toBe(false);
-    expect(response.body.code).toBe("RESOURCE_CONFLICT");
+      expect(response.status).toBe(409);
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe("RESOURCE_CONFLICT");
+    });
+
+    it("should reject email that already exists", async () => {
+      const password = "1234567890";
+
+      await db.insert(users).values({
+        username: "existing_user",
+        name: "Existing User",
+        email: "existing@example.com",
+        password: await hashPassword(password),
+        roleId: 1,
+      });
+
+      const response = await request(app).post("/api/auth/register").send({
+        username: "new_user",
+        name: "New User",
+        email: "existing@example.com",
+        password,
+        roleId: 1,
+      });
+
+      expect(response.status).toBe(409);
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe("RESOURCE_CONFLICT");
+    });
+
+    it("should reject email that already exists with different capitalization", async () => {
+      const password = "1234567890";
+
+      await db.insert(users).values({
+        username: "existing_user",
+        name: "Existing User",
+        email: "existing@example.com",
+        password: await hashPassword(password),
+        roleId: 1,
+      });
+
+      const response = await request(app).post("/api/auth/register").send({
+        username: "new_user",
+        name: "New User",
+        email: "Existing@Example.COM",
+        password,
+        roleId: 1,
+      });
+
+      expect(response.status).toBe(409);
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe("RESOURCE_CONFLICT");
+    });
   });
 
   describe("POST /api/auth/register", () => {
@@ -164,6 +257,7 @@ describe("POST /auth/register", () => {
         const response = await request(app).post("/api/auth/register").send({
           username: "test_user",
           name: "Test User",
+          email: "test_user@example.com",
           password: "1234567890",
           roleId: 1,
         });
@@ -174,10 +268,24 @@ describe("POST /auth/register", () => {
         expect(response.body.data).toMatchObject({
           username: "test_user",
           name: "Test User",
+          email: "test_user@example.com",
           roleId: 1,
         });
 
         expect(response.body.data).not.toHaveProperty("password");
+      });
+
+      it("should store email in lowercase without surrounding spaces", async () => {
+        const response = await request(app).post("/api/auth/register").send({
+          username: "test_user",
+          name: "Test User",
+          email: "  Test_User@Example.COM  ",
+          password: "1234567890",
+          roleId: 1,
+        });
+
+        expect(response.status).toBe(201);
+        expect(response.body.data.email).toBe("test_user@example.com");
       });
     });
   });

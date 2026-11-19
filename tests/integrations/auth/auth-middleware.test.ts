@@ -99,6 +99,7 @@ describe("Auth Middleware", () => {
       const user = {
         username: "test_user",
         name: "Test User",
+        email: "test_user@example.com",
         password: await hashPassword(password),
         roleId: 1,
       };
