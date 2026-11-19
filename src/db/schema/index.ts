@@ -1,4 +1,5 @@
 export * from "./users.js";
+export * from "./lecturers.js";
 export * from "./roles.js";
 export * from "./permissions.js";
 export * from "./role-permissions.js";
