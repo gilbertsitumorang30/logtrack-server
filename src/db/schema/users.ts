@@ -11,6 +11,7 @@ export const users = mysqlTable("users", {
   id: int().primaryKey().autoincrement(),
   name: varchar({ length: 150 }).notNull(),
   username: varchar({ length: 150 }).notNull().unique(),
+  email: varchar({ length: 255 }).notNull().unique(),
   password: varchar({ length: 150 }).notNull(),
   roleId: int("role_id")
     .notNull()

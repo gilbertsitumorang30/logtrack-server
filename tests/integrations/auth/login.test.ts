@@ -65,6 +65,7 @@ describe("POST /auth/login", () => {
       await db.insert(users).values({
         username: "test_user",
         name: "Test User",
+        email: "test_user@example.com",
         password: await hashPassword(password),
         roleId: 1,
       });
@@ -87,6 +88,7 @@ describe("POST /auth/login", () => {
       await db.insert(users).values({
         username: "test_user",
         name: "Test User",
+        email: "test_user@example.com",
         password: await hashPassword(password),
         roleId: 1,
       });
@@ -104,6 +106,7 @@ describe("POST /auth/login", () => {
       expect(response.body.data.user).toMatchObject({
         username: "test_user",
         name: "Test User",
+        email: "test_user@example.com",
         roleId: 1,
       });
 

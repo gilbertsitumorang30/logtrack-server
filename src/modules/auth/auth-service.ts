@@ -5,10 +5,17 @@ import { comparePassword, hashPassword } from "../../utils/password.js";
 import { userRepository } from "../user/user-repository.js";
 import type { LoginInput, RegisterInput } from "./auth-schema.js";
 
-const register = async (newUser: RegisterInput) => {
-  const userExist = await userRepository.findByUsername(newUser.username);
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
-  if (userExist) {
+const register = async (newUser: RegisterInput) => {
+  const email = normalizeEmail(newUser.email);
+
+  const [usernameTaken, emailTaken] = await Promise.all([
+    userRepository.findByUsername(newUser.username),
+    userRepository.findByEmail(email),
+  ]);
+
+  if (usernameTaken || emailTaken) {
     throw new AppError("User already exist", 409, {
       code: ERROR_CODES.RESOURCE_CONFLICT,
     });
@@ -18,6 +25,7 @@ const register = async (newUser: RegisterInput) => {
 
   const saveUser = await userRepository.create({
     ...newUser,
+    email,
     password: hashedPassword,
   });
 

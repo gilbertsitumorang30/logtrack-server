@@ -6,6 +6,7 @@ const publicUserColumns = {
   id: users.id,
   username: users.username,
   name: users.name,
+  email: users.email,
   roleId: users.roleId,
   createAt: users.createdAt,
   updatedAt: users.updatedAt,
@@ -16,6 +17,15 @@ export const findByUsername = async (username: string) => {
     .select(publicUserColumns)
     .from(users)
     .where(eq(users.username, username));
+
+  return result[0];
+};
+
+export const findByEmail = async (email: string) => {
+  const result = await db
+    .select(publicUserColumns)
+    .from(users)
+    .where(eq(users.email, email));
 
   return result[0];
 };
@@ -42,6 +52,7 @@ export const create = async (data: typeof users.$inferInsert) => {
 
 export const userRepository = {
   findByUsername,
+  findByEmail,
   create,
   findByUsernameWithPassword,
 };
