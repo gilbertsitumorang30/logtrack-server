@@ -11,6 +11,8 @@ coverage/
 # Local documentation & agent instructions
 docs/
 AGENTS.md
+issue-docs/
 .opencode/skills/express-feature/
+.opencode/skills/directed-development/
 
 .DS_Store
